@@ -13,58 +13,67 @@ import requests
 import json
 
 
-def get_post_by_id(pid, base_url):
-    url = base_url + str(pid) + '/'
+def check_url(url):
     try:
-        r = requests.get(url)
-        # soup = BeautifulSoup(r.text, 'html5lib')
-
-        if (r.status_code == 404) or (r.status_code == 403):  # проверка на существование
-            pass
+        r = requests.head(url, proxies={'https': 'https://178.16.152.254:3128'})
+        if r.status_code == 200:
+            return True
         else:
-            post = {}
-            r = requests.get(url)
-            soup = BeautifulSoup(r.text, 'html5lib')
-            post['pid'] = pid  # номер
-            if soup.find("span", attrs={"class": "post__title-text"}).text:
-                post['title'] = soup.find("span", attrs={"class": "post__title-text"}).text
-            else:
-                post['title'] = "ND"
-            if soup.find("span", attrs={"class": "user-info__nickname user-info__nickname_small"}).text:
-                post['nickname'] = soup.find("span", attrs={"class": "user-info__nickname user-info__nickname_small"}).text
-            else:
-                post['nickname'] = "ND"
-            if soup.find("a", attrs={"class": "post__user-info user-info"}, href=True)['href']:
-                post['author_url'] = soup.find("a", attrs={"class": "post__user-info user-info"}, href=True)['href']
-            else:
-                post['author_url'] = "ND"
-            if soup.find("span", attrs={"class": "post__time"}).text:
-                post['publish_date'] = soup.find("span", attrs={"class": "post__time"}).text
-            else:
-                post['publish_date'] = "ND"
-            if soup.find("span", attrs={"class": "post-stats__views-count"}).text:
-                post['views'] = soup.find("span", attrs={"class": "post-stats__views-count"}).text
-            else:
-                post['views'] = "ND"
-            if soup.find("meta", attrs={"name": "description"})['content']:
-                post['description'] = soup.find("meta", attrs={"name": "description"})['content']
-            else:
-                post['description'] = "ND"
-            if soup.find("div", attrs={"class": "post__body post__body_full"}).text:
-                post['body'] = soup.find("div", attrs={"class": "post__body post__body_full"}).text
-            else:
-                post['body'] = "ND"
-
-            if post['pid'] is not "ND":
-                print(f"[*] Post {post['pid']} loaded")
-            with open('posts.json', 'a') as f:
-                json.dump(post, fp=f, ensure_ascii=False)
-
-            return post
-
-    except Exception:
+            return False
+    except requests.exceptions.ConnectionError:
         pass
 
+def get_post(article):
+    try:
+        post = {}
+        link = article.find('a', attrs={"class": "post__title_link"}, href=True)
+        postid = link.attrs['href'].split('/')[-2]
+        description = article.find("div", attrs={"class": "post__text post__text-html js-mediator-article"})
+        author = article.find('a', attrs={"class": "post__user-info user-info"})
+        post['id'] = postid
+        post['href'] = link.attrs['href']
+        post['author'] = author.text.strip()
+        post['author_url'] = author.attrs['href']
+        post['description'] = description.text
+
+        return json.dumps(post)
+
+    except Exception:
+        return None
+
+            # soup = BeautifulSoup(r.text, 'html5lib')
+            # post['pid'] = pid  # номер
+            # if soup.find("span", attrs={"class": "post__title-text"}).text:
+            #     post['title'] = soup.find("span", attrs={"class": "post__title-text"}).text
+            # else:
+            #     post['title'] = "ND"
+            # if soup.find("span", attrs={"class": "user-info__nickname user-info__nickname_small"}).text:
+            #     post['nickname'] = soup.find("span", attrs={"class": "user-info__nickname user-info__nickname_small"}).text
+            # else:
+            #     post['nickname'] = "ND"
+            # if soup.find("a", attrs={"class": "post__user-info user-info"}, href=True)['href']:
+            #     post['author_url'] = soup.find("a", attrs={"class": "post__user-info user-info"}, href=True)['href']
+            # else:
+            #     post['author_url'] = "ND"
+            # if soup.find("span", attrs={"class": "post__time"}).text:
+            #     post['publish_date'] = soup.find("span", attrs={"class": "post__time"}).text
+            # else:
+            #     post['publish_date'] = "ND"
+            # if soup.find("span", attrs={"class": "post-stats__views-count"}).text:
+            #     post['views'] = soup.find("span", attrs={"class": "post-stats__views-count"}).text
+            # else:
+            #     post['views'] = "ND"
+            # if soup.find("meta", attrs={"name": "description"})['content']:
+            #     post['description'] = soup.find("meta", attrs={"name": "description"})['content']
+            # else:
+            #     post['description'] = "ND"
+            # if soup.find("div", attrs={"class": "post__body post__body_full"}).text:
+            #     post['body'] = soup.find("div", attrs={"class": "post__body post__body_full"}).text
+            # else:
+            #     post['body'] = "ND"
+            #
+            # if post['pid'] is not "ND":
+            #     print(f"[*] Post {post['pid']} loaded")
 
 # этот велосипед я использую всегда для получения нужных мне кусков html-а
 def generic_get(soup, search_tag, condition):
