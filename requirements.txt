@@ -4,7 +4,7 @@ chardet==3.0.4
 fake-useragent==0.1.11
 html5lib==1.1
 idna==2.10
-lxml==4.5.2
+lxml==4.6.2
 psycopg2==2.8.5
 requests==2.24.0
 requests-futures==1.0.0
