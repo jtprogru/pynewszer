@@ -9,7 +9,7 @@ psycopg2==2.9.2
 requests==2.31.0
 requests-futures==1.0.0
 six==1.16.0
-soupsieve==2.3.1
+soupsieve==2.9
 sqlite3worker==1.1.7
 urllib3==1.26.7
 webencodings==0.5.1
